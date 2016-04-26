@@ -52,15 +52,102 @@ input::-webkit-input-placeholder {
 * Gallery styling
 */
 
-.gallery {
-  max-width: 1040px;
-  margin: auto;
-  text-align: center;
+.gallery-item {
+  margin-bottom: 2.5rem;
+  position: relative;
+  transition: all .3s;
 }
 
-.gallery-item {
-  display: inline-block;
-  margin: 0 27px 54px;
+.gallery-item:hover {
+  transform: scale(1.05);
+}
+
+.gallery-item img {
+  display: block;
+  width: 80%;
+  margin: 0 auto;
+}
+
+.gallery-item:hover img {
+}
+
+.gallery-item a::before {
+  content: "";
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, .3);
+  transition: all .3s;
+}
+
+.gallery-item:hover a::before {
+  background-color: rgba(0, 0, 0, 0);
+}
+
+
+.video a::before {
+  background-image: url('../img/play-arrow.svg');
+}
+
+@media (min-width: 540px) {
+  .gallery {
+    padding: 0 5%;
+  }
+
+  .gallery-item {
+    float: left;
+    width: 47.5%;
+    margin-right: 5%;
+  }
+
+  .gallery-item img {
+    width: 100%;
+  }
+}
+
+@media (min-width: 540px) and (max-width: 767px) {
+  .gallery-item:nth-of-type(2n) {
+    margin-right: 0;
+  }
+}
+
+@media (min-width: 768px) {
+  .gallery-item {
+    width: 30%;
+    margin-right: 5%;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .gallery-item:nth-of-type(3n) {
+    margin-right: 0;
+  }
+}
+
+@media (min-width: 1024px) {
+  .gallery {
+    padding: 0;
+    max-width: 980px;
+    margin: 0 auto;
+  }
+
+  .gallery-item {
+    width: 200px;
+    margin-right: 60px;
+    margin-bottom: 60px;
+  }
+
+  .gallery-item:nth-of-type(4n) {
+    margin-right: 0;
+  }
+
+  .gallery-item .selected {
+    background: olive;
+  }
+
 }
 
 
@@ -70,8 +157,9 @@ input::-webkit-input-placeholder {
 */
 
 .lightbox {
-  position: absolute;
-  background: rgba(0, 0, 0, .8);
+  display: none;
+  position: fixed;
+  background: rgba(0, 0, 0, .85);
   top: 0;
   left: 0;
   width: 100%;
@@ -87,12 +175,17 @@ input::-webkit-input-placeholder {
   transform: translate(-50%, -50%);
 }
 
-.lightbox a {
+.lightbox span {
   display: inline-block;
   width: 30px;
   height: 50px;
   vertical-align: middle;
-  background: orange;
+}
+
+.lightbox a {
+  display: block;
+  width: 100%;
+  height: 50px;
 }
 
 .lightbox .prev {
@@ -113,6 +206,15 @@ input::-webkit-input-placeholder {
   max-width: 800px;
 }
 
+.lightbox-content iframe {
+  display: inline-block;
+  vertical-align: middle;
+  margin: 0 2rem;
+  width: 80%;
+  height: 450px;
+  max-width: 800px;
+}
+
 .lightbox p {
   color: rgba(255, 255, 255, .8);
   display: block;
@@ -120,6 +222,7 @@ input::-webkit-input-placeholder {
   padding: 0 2rem;
   width: 80%;
   max-width: 600px;
+  min-height: 3rem;
 }
 
 @media (max-width: 780px) {
