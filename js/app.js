@@ -1,126 +1,195 @@
-// Lightbox elements
-var $lbx = $('<div class="lightbox"></div>');
-var $lbxContent = $('<div class="lightbox-content"></div>');
-var $prevBtn = $('<span><a href="#" class="prev"></a></span>');
-var $nextBtn = $('<span><a href="#" class="next"></a></span>');
-var $imgElement = $('<img>');
-var $videoElement = $('<iframe frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>');
-var $elementCaption = $('<p></p>');
-var $currentElement;
+/**
+ * Assemble gallery and zoom element
+ */
 
-// Assemble the Lightbox
-$('body').append($lbx);
-$lbx.append($lbxContent);
-$lbxContent.append($prevBtn, $imgElement, $videoElement, $nextBtn, $elementCaption);
+// Assemble the gallery from JSON data
+var galleryHTML = '<ul class="gallery">';
+$.each(galleryItems, function(index, item){
+  galleryHTML += '<li class="gallery-item active ' + item.type + '">';
+  galleryHTML += '<a href="' + item.location + '">';
+  galleryHTML += '<img src="' + item.thumbnail + '" alt="' + item.title + '" title="' + item.caption + '">';
+  galleryHTML += '</a>';
+  galleryHTML += '</li>';
 
-
-
-// Load Lightbox content
-function loadContent($item) {
-  $currentElement = $item;
-
-  // Read the content attributes
-  var $itemLink = $item.children('a').attr('href');
-  var $itemCaption = $item.children('a').children('img').attr('title');
-
-  // Hide all elements
-  $elementCaption.hide();
-  $imgElement.hide();
-  $videoElement.hide();
-  $videoElement.attr('src', '');
-
-  // Assemble the image element based on element type
-  if ($item.hasClass('video'))
+  // Preload target images as the gallery is built
+  if (item.type === "image")
   {
-    $videoElement.attr('src', $itemLink);
-    $videoElement.fadeIn(350);
-  } else {
-    $imgElement.attr('src', $itemLink);
-    $imgElement.fadeIn(350);
-  }
-  $elementCaption.text($itemCaption);
-  $elementCaption.fadeIn(350);
-
-  // If there is a previous element, show the previous button
-  if ($item.prev().length)
-  {
-    $('.prev').fadeIn(100);
-  } else {
-    $('.prev').fadeOut(100);
-  }
-
-  // If there is a next element, show next button
-  if ($item.next().length)
-  {
-    $('.next').fadeIn(100);
-  } else {
-    $('.next').fadeOut(100);
-  }
-}
-
-// Close the Lightbox
-function closeLightbox(){
-  $videoElement.attr('src', '');
-  $(".lightbox").fadeOut(200);
-}
-
-// Show up the lightbox when clicking on a gallery item
-$(".gallery-item a").click(function(event){
-  event.preventDefault();
-  loadContent($(this).parent());
-  $lbx.fadeIn(200);
-});
-
-// Get previous element if PREV button is visible
-$prevBtn.click(function(){
-  if ($(this).children('a').is(':visible'))
-  {
-    loadContent($currentElement.prev());
-  }
-  return false;
-});
-
-// Get next element if NEXT button is visible
-$nextBtn.click(function(){
-  if ($(this).children('a').is(':visible'))
-  {
-    loadContent($currentElement.next());
-  }
-  return false;
-});
-
-// Left Arrow, Right Arrow and Escape keyboard behaviour
-$(document).keydown(function(event){
-  if ($nextBtn.children('a').is(':visible') && event.which === 39)
-  {
-    loadContent($currentElement.next());
-  }
-  else if ($prevBtn.children('a').is(':visible') && event.which === 37)
-  {
-    loadContent($currentElement.prev());
-  } else if (event.which === 27) {
-    closeLightbox();
+    $('<img/>')[0].src = item.location;
   }
 });
+  galleryHTML += '</ul>';
 
-// Hide the lightbox
-$(".lightbox").click(function(){
-  closeLightbox();
-});
+// Assemble the zoom Lightbox
+var zoomHTML  = '<div class="zoom">';
+    zoomHTML += ' <div class="zoom-wrap">';
+    zoomHTML += '   <a href="#" class="zoom-nav zoom-prev"></a>';
+    zoomHTML += '   <div class="zoom-media">';
+    zoomHTML += '     <img src="img/media-bg.png" alt="">';
+    zoomHTML += '     <iframe src=""></iframe>';
+    zoomHTML += '   </div>';
+    zoomHTML += '   <a href="#" class="zoom-nav zoom-next"></a>';
+    zoomHTML += '   <p class="zoom-caption"></p>';
+    zoomHTML += ' </div>';
+    zoomHTML += '</div>';
+
+// Add gallery and zoomBox to the DOM
+$('main').html(galleryHTML);
+$('body').append(zoomHTML);
+
+// Hooking variables
+var $zoom = $('.zoom').hide();
+var $imageFrame = $('.zoom img');
+var $videoFrame = $('.zoom iframe').hide();
+var $zoomPrev = $('.zoom-prev');
+var $zoomNext = $('.zoom-next');
+var $zoomMedia = $('.zoom-media');
+var $zoomCaption = $('.zoom-caption');
+var $curentPosition;
+var $totalActive;
 
 
+/**
+ * Search Function
+ */
 
-// Search function
+// Search function sets the "active" class to filtered items and hides the rest
 $('#search').keyup(function(){
-  var searchWord = $('#search').val();
 
-  $('.gallery-item').each(function(index, element){
-      var searchTitle = $(element).children('a').children('img').attr('title');
+  // Loop through all gallery items and search the title image attibute
+  var searchWord = $('#search').val();
+  $('.gallery-item').each(function(index, item){
+      var searchTitle = $(item).children('a').children('img').attr('title');
         if (searchTitle.indexOf(searchWord) === -1)
         {
-          $(element).hide();
+          $(item).fadeOut(300).removeClass('active');
         } else {
-          $(element).show();
+          $(item).fadeIn(300).addClass('active');
         }
   });
+
+  // Add empty gallery units to keep the formatting tidy on 4 columns
+  $('.empty').remove();
+  var toAdd = 4 - $('.active').length % 4;
+  for (var i = 0; i < toAdd; i++)
+  {
+    $('.gallery').append('<li class="empty"></li>');
+  }
+});
+
+
+
+/**
+ * Zoom function
+ */
+
+function loadZoomContent(item){
+
+  $zoomCaption.animate({opacity: 0});
+  $zoomMedia.animate({opacity: 0}, function(){
+
+    // Read image information
+    var elementURL = $(item).attr('href');
+    var elementCaption = $(item).children().attr('title');
+
+    // Add caption
+    $zoomCaption.text(elementCaption);
+
+    // Set information based on elementy type
+    if ($(item).parent().hasClass('video'))
+    {
+      $imageFrame.attr('src', 'img/media-bg.png');
+      $videoFrame.attr('src', elementURL).show();
+    } else {
+      $videoFrame.fadeOut();
+      $imageFrame.attr('src', elementURL);
+    }
+
+    $zoomMedia.animate({opacity: 1});
+    $zoomCaption.animate({opacity: 1});
+
+  });
+
+
+  // Disable arrow buttons if the end was reached
+  curentPosition = $('.active').index($(item).parent());
+  totalActive = $('.active').length;
+
+  if (curentPosition === 0) {
+    $zoomPrev.addClass('zoom-button-hide');
+  } else {
+    $zoomPrev.removeClass('zoom-button-hide');
+  }
+
+  if (curentPosition === totalActive - 1) {
+    $zoomNext.addClass('zoom-button-hide');
+  } else {
+    $zoomNext.removeClass('zoom-button-hide');
+  }
+}
+
+
+
+/**
+* Prev Next button navigation
+*/
+
+$zoomPrev.click(function(){
+  loadZoomContent($('.active').eq(curentPosition - 1).children('a'));
+  return false;
+});
+
+$zoomNext.click(function(){
+  loadZoomContent($('.active').eq(curentPosition + 1).children('a'));
+  return false;
+});
+
+
+
+/**
+* Keyboard navigation and event
+*/
+
+$(document).keydown(function(event){
+  if (!$zoomPrev.hasClass('zoom-button-hide') && event.which === 37)
+  {
+    loadZoomContent($('.active').eq(curentPosition - 1).children('a'));
+  }
+  else if (!$zoomNext.hasClass('zoom-button-hide') && event.which === 39)
+  {
+    loadZoomContent($('.active').eq(curentPosition + 1).children('a'));
+  }
+  else if (event.which === 27)
+  {
+    hideZoom();
+  }
+});
+
+
+
+/**
+* Activate zoom
+*/
+
+// Show up the zoom box when clicking on a gallery item
+$(".gallery-item a").click(function(event){
+  event.preventDefault();
+  $zoomMedia.animate({opacity: 0}, 0);
+  $zoomCaption.animate({opacity: 0}, 0);
+  loadZoomContent(this);
+  $zoom.fadeIn(300);
+});
+
+
+
+/**
+* Deactivate zoom
+*/
+
+function hideZoom(){
+  $videoFrame.attr('src', '');
+  $zoom.fadeOut(200);
+}
+
+$zoom.click(function(){
+  hideZoom();
 });
