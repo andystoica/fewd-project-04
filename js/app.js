@@ -178,9 +178,9 @@ var totalActive;
 $('#search').keyup(function(){
 
   // Loop through all gallery items and search the title image attibute
-  var searchWord = $('#search').val();
+  var searchWord = $('#search').val().toLowerCase();
   $('.gallery-item').each(function(index, item){
-      var searchTitle = $(item).children('a').children('img').attr('title');
+      var searchTitle = $(item).children('a').children('img').attr('title').toLowerCase();
         if (searchTitle.indexOf(searchWord) === -1)
         {
           $(item).fadeOut(600).removeClass('active');
@@ -271,6 +271,7 @@ $(".gallery-item a").click(function(event){
 */
 
 function hideZoom(){
+  $imageFrame.attr('src', 'img/media-bg.png');
   $videoFrame.attr('src', '');
   $zoom.fadeOut(200);
 }
