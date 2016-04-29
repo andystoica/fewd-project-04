@@ -180,7 +180,8 @@ $('#search').keyup(function(){
   // Loop through all gallery items and search the title image attibute
   var searchWord = $('#search').val().toLowerCase();
   $('.gallery-item').each(function(index, item){
-      var searchTitle = $(item).children('a').children('img').attr('title').toLowerCase();
+      var searchTitle  = $(item).children('a').children('img').attr('title').toLowerCase();
+          searchTitle += $(item).children('a').children('img').attr('alt').toLowerCase();
         if (searchTitle.indexOf(searchWord) === -1)
         {
           $(item).fadeOut(600).removeClass('active');
@@ -206,32 +207,6 @@ $('#search').keyup(function(){
 
 function loadZoomContent(item){
 
-  $zoomCaption.animate({opacity: 0});
-  $zoomMedia.animate({opacity: 0}, function(){
-
-    // Read image information
-    var elementURL = $(item).attr('href');
-    var elementCaption = $(item).children().attr('title');
-
-    // Add caption
-    $zoomCaption.text(elementCaption);
-
-    // Set information based on elementy type
-    if ($(item).parent().hasClass('video'))
-    {
-      $imageFrame.attr('src', 'img/media-bg.png');
-      $videoFrame.attr('src', elementURL).show();
-    } else {
-      $videoFrame.fadeOut();
-      $imageFrame.attr('src', elementURL);
-    }
-
-    $zoomMedia.animate({opacity: 1});
-    $zoomCaption.animate({opacity: 1});
-
-  });
-
-
   // Disable arrow buttons if the end was reached
   curentPosition = $('.active').index($(item).parent());
   totalActive = $('.active').length;
@@ -247,6 +222,31 @@ function loadZoomContent(item){
   } else {
     $zoomNext.removeClass('zoom-button-hide');
   }
+
+  $zoomCaption.animate({opacity: 0});
+  $zoomMedia.animate({opacity: 0}, function(){
+
+  // Read image information
+  var elementURL = $(item).attr('href');
+  var elementCaption = $(item).children().attr('title');
+
+  // Add caption
+  $zoomCaption.text(elementCaption);
+
+  // Set information based on elementy type
+  if ($(item).parent().hasClass('video'))
+  {
+    $imageFrame.attr('src', 'img/media-bg.png');
+    $videoFrame.attr('src', elementURL).show();
+  } else {
+    $videoFrame.fadeOut();
+    $imageFrame.attr('src', elementURL);
+  }
+
+  $zoomMedia.animate({opacity: 1});
+  $zoomCaption.animate({opacity: 1});
+
+  });
 }
 
 
